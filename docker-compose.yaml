@@ -1,0 +1,17 @@
+version: '2.4'
+services:
+  classify:
+    build: .
+    command: gunicorn -w 4 -t 300 --bind 0.0.0.0:8000 app:app
+  nginx:
+    image: nginx:1.22.0
+    command: >
+          /bin/sh -c "/wait-for-it.sh -t 0 classify:8000 -- echo classify is up;
+                      service nginx start; tail -f /dev/null"
+    ports:
+      - 80:80
+    volumes:
+      - ./wait-for-it.sh:/wait-for-it.sh
+      - ./classify.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - classify
